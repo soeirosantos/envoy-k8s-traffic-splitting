@@ -2,7 +2,7 @@
 
 To explore this lab you should have a k8s cluster installed and understand the
 basics of Kubernetes (Deployments, Pods, Services, etc). To start a cluster
-locally you can try [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)
+locally you can try [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/).
 
 ## Goal
 
@@ -15,15 +15,15 @@ route is shifted gradually from one backend to another.
 ## How it works
 
 In this set up we are using Envoy as a reverse-proxy in front of a backend
-application. This application is configured to 3 replicas and the load balancing
+application. This application is configured to deploy 3 replicas and the load balancing
 across the multiple instances is done via Envoy using a [headless sercice](https://kubernetes.io/docs/concepts/services-networking/service/#headless-services) for
 service discovery. This headless service, instead of providing load balancing or
-proxying, modifies the DNS configuration to return records (addresses) that point
-directly to the Pods backing the Service. In the Envoy side is used the [Strict DNS](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/service_discovery#arch-overview-service-discovery-types-strict-dns)
+proxying as usual, modifies the DNS configuration to return records (addresses) that point
+directly to the Pods backing the Service. In the Envoy side we use the [Strict DNS](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/service_discovery#arch-overview-service-discovery-types-strict-dns)
 service discovery type.
 
-Then we add another upstream backend to represent a v2 of the backend app and
-configure it to [split the traffic](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_conn_man/traffic_splitting.html) across the two versions.
+Now we can add another upstream backend to represent a v2 of the backend app and
+configure Envoy to [split the traffic](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_conn_man/traffic_splitting.html) across the two versions.
 
 ![Envoy Traffic Splitting](envoy_traffic_splitting.jpg)
 
@@ -36,7 +36,7 @@ $ kubectl create ns backend
 $ kubectl apply -f backend-app.yaml
 ```
 
-This yaml configuration will install two deployments controllers and two headless
+This yaml configuration will install two deployment controllers and two headless
 services, one for each version of the backend app. Note that the headless service
 is defined by the `clusterIP: None` parameter. These apps do nothing but output
 some information about the HTTP request and pod environment.
@@ -84,18 +84,18 @@ Address 3: 10.20.0.40
 
 ```
 
-Just for tests purposes, access one of the IP returned in the `nslookup`
+Just for tests purposes, access one of the IPs returned in the `nslookup`
 
 ```bash
 wget -qO- 10.20.0.40:8080 | grep Hostname
 Hostname: backend-app-v1-78db44c49d-7ntqn
 ```
 
-Now open a new tab or simply run from your terminal session (not from the pod
-we created before):
+Now open a new tab or simply run from your terminal session (not from the 
+temporary client pod we created before):
 
 ```bash
-kubectl describe svc backend-app-v1 -n backend
+$ kubectl describe svc backend-app-v1 -n backend
 Name:              backend-app-v1
 Namespace:         backend
 Labels:            <none>
@@ -118,13 +118,13 @@ It's time to deploy Envoy:
 $ kubectl apply -f envoy.yaml
 ```
 
-This yaml file contains the Envoy configuration deployed as a ConfigMap, the
-deployment responsible to deploy the Envoy pod and a `ClusterIP` service to
+This yaml file contains the Envoy configuration deployed as a `ConfigMap`, the
+deployment controller responsible to deploy the Envoy pod and a `ClusterIP` service to
 expose the Envoy pod to other applications deployed to the same cluster. (Notice
-that there is no restrictions here to expose this pod to traffic from outside
+that there is no restrictions to expose this pod to traffic from outside
 the cluster using an Ingress or LoadBalancer - it's just not our focus here)
 
-Check you Envoy pod:
+Check your Envoy pod:
 
 ```bash
 $ kubectl get po -n backend -l name=backend-envoy
@@ -140,7 +140,7 @@ Hostname: backend-app-v1-78db44c49d-7ntqn
 ```
 
 Notice that each time you run this command you get a different pod and, eventually,
-you'll see a pod from the v2.
+you'll see a pod from the v2 backend.
 
 You may also try this:
 
